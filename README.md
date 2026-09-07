@@ -27,6 +27,13 @@ npm start
 - A leftover `console.log` in `Questions.js`.
 - `DateCounter.js` is a separate `useReducer` exercise, not part of the quiz.
 
----
+## Why it is still exactly as I wrote it
 
-A learning project from my React practice. Built with Create React App.
+The list above is short enough to clear in ten minutes. I have left it.
+
+This repo is the day `useReducer` stopped being a hook I had read about and
+became one I could reach for, and the typos are part of that day. Renaming
+`finsh.js` now would give me a cleaner file tree and cost me the only honest
+record I have of where I was.
+
+I work with current React tooling. This is where I started, kept as it was.
