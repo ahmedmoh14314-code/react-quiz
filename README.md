@@ -1,70 +1,101 @@
-# Getting Started with Create React App
+# The React Quiz
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A 15-question quiz about React. You get 30 seconds per question, points per
+correct answer, and the app keeps your highscore between rounds.
 
-## Available Scripts
+I built this to practise `useReducer`. The app has a real state machine — the
+whole screen is decided by one `status` field — and that turned out to be the
+part I learned the most from.
 
-In the project directory, you can run:
+## Running it
 
-### `npm start`
+The questions are served by `json-server`, so you need two terminals:
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+```bash
+npm install
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+npm run server   # serves data/questions.json on http://localhost:8000
+npm start        # http://localhost:3000
+```
 
-### `npm test`
+If you only run `npm start`, the fetch fails and you get the error screen.
+That is expected — the API has to be up first.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## How the state works
 
-### `npm run build`
+Everything lives in one reducer in `src/components/App.js`:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```js
+const initialState = {
+  questions: [],
+  status: "loading",
+  index: 0,
+  answer: null,
+  points: 0,
+  highscore: 0,
+  secondsRemaining: null,
+};
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+`status` moves through `loading → ready → active → finished`, and the JSX just
+renders whatever matches:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```jsx
+{status === "loading" && <Loader />}
+{status === "error" && <Error />}
+{status === "ready" && <StartScreen ... />}
+{status === "active" && ( ... )}
+{status === "finished" && <Finsh ... />}
+```
 
-### `npm run eject`
+The reason I used a reducer instead of seven `useState` calls: the actions
+touch several fields at once. `start` sets the status *and* calculates the
+timer from the number of questions. `newAnswer` stores the answer *and* adds
+points. `finish` sets the status *and* compares against the highscore. Keeping
+those together in one place is what made the app stop breaking.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Some things I worked out while building it:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- **`maxPoints` and `numQuestions` are not state.** They are derived from
+  `questions` on every render. Storing them would mean keeping them in sync.
+- **The timer dispatches, it does not own the countdown.** `Timer` runs a
+  `setInterval` that fires `{ type: "tick" }`, and the reducer decides when
+  time is up. The interval is cleared in the effect cleanup, otherwise a new
+  one stacks up on every render.
+- **`restart` reuses the fetched questions.** It spreads `initialState` but
+  keeps `state.questions` and jumps straight to `ready`, so it does not refetch.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## Structure
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```
+data/questions.json          the 15 questions, served by json-server
+src/components/
+├── App.js                   reducer + status routing
+├── StartScreen.js           question count and the start button
+├── Questions.js             the current question
+├── Options.js               answer buttons, locked after answering
+├── Progress.js              progress bar and running score
+├── Timer.js                 setInterval that dispatches "tick"
+├── NextQuestions.js         Next / Finish depending on the index
+├── finsh.js                 final score and restart
+├── Loader.js / Error.js     fetch states
+└── Header.js / Main.js / Footer.js
+```
 
-## Learn More
+## Known issues
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Things I know are wrong and want to come back to:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- There is no hosted demo, because the questions need `json-server` running
+  locally. Moving them into the bundle would fix that.
+- Some names are misspelled: `finsh.js`, the `restrat` action, `qusetions` in
+  the start screen. They work, but they should be fixed.
+- `finsh` is a component and should start with a capital letter.
+- There is a leftover `console.log(question)` in `Questions.js`.
+- `DateCounter.js` is a separate `useReducer` exercise that is not part of the
+  quiz. It is still in the folder.
+- The timer keeps running while the tab is in the background.
 
-### Code Splitting
+## Built with
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Create React App, React 19, `useReducer`, `json-server`.
