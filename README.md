@@ -3,6 +3,8 @@
 A 15-question quiz. 30 seconds per question, points per correct answer, and it
 keeps your highscore.
 
+![A question with the timer and score running](docs/screenshot.png)
+
 I built this while learning `useReducer`. One reducer holds everything —
 `status`, `index`, `points`, `secondsRemaining` — and `status` decides what is
 on screen: `loading → ready → active → finished`.
